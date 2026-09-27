@@ -1,0 +1,42 @@
+{
+  "clay_embeddings": {
+    "expected": 983,
+    "actual": 115,
+    "status": "FAIL"
+  },
+  "qdrant_clay": {
+    "expected": 983,
+    "actual": 115,
+    "status": "FAIL"
+  },
+  "qdrant_clip": {
+    "expected": 983,
+    "actual": 983,
+    "status": "PASS"
+  },
+  "temporal_pairs": {
+    "expected": 544,
+    "actual": 543,
+    "status": "FAIL"
+  },
+  "change_results": {
+    "expected": ">=0",
+    "actual": 11,
+    "status": "PASS"
+  },
+  "metadata_consistency": {
+    "status": "PASS"
+  },
+  "tile_id_consistency": {
+    "status": "PASS"
+  },
+  "geospatial_metadata": {
+    "status": "PASS"
+  },
+  "embedding_dimensions": {
+    "status": "PASS"
+  },
+  "no_duplicate_ids": {
+    "status": "PASS"
+  }
+}

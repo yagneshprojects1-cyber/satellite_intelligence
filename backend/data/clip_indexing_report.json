@@ -1,0 +1,16 @@
+{
+  "collection_name": "satellite_tiles_clip",
+  "vector_dimension": 512,
+  "distance_metric": "COSINE",
+  "clip_model": "openai/clip-vit-base-patch32",
+  "clip_model_source": "HuggingFace",
+  "clip_license": "MIT",
+  "tiles_discovered": 983,
+  "tiles_processed": 983,
+  "tiles_skipped_existing": 0,
+  "tiles_failed": 0,
+  "processing_time": 775.8725514411926,
+  "indexing_timestamp": "2026-09-27T23:09:40.989300",
+  "rgb_preprocessing": "B04(red), B03(green), B02(blue) with percentile normalization",
+  "processing_version": "1.0"
+}

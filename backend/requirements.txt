@@ -1,0 +1,84 @@
+# ============================================================
+# Python: 3.12.10
+# Platform tested/targeted: Windows x64
+# ============================================================
+
+# -------------------------
+# Deep Learning / AI
+# -------------------------
+torch==2.4.0
+transformers==4.57.1
+huggingface-hub==0.36.0
+timm==1.0.20
+einops==0.7.0
+lightning==2.5.5
+
+# Clay Foundation Model v1.5
+claymodel==1.5.0
+
+# -------------------------
+# Numerical / Data Processing
+# -------------------------
+numpy==1.26.4
+pandas==2.3.3
+scipy==1.16.2
+scikit-learn==1.7.2
+hdbscan==0.8.41
+
+# -------------------------
+# Geospatial
+# -------------------------
+rasterio==1.4.4
+geopandas==1.1.1
+shapely==2.1.2
+pyproj==3.7.2
+scipy==1.16.2
+
+# IMPORTANT:
+# Do NOT add GDAL here.
+# Rasterio provides the required GDAL runtime.
+# Install standalone GDAL only if your code explicitly
+# requires the osgeo.gdal Python bindings.
+
+# -------------------------
+# Vector Database
+# -------------------------
+qdrant-client==1.15.1
+
+# -------------------------
+# PostgreSQL / PostGIS
+# -------------------------
+sqlalchemy==2.0.43
+geoalchemy2==0.18.0
+psycopg2-binary==2.9.10
+python-dotenv==1.1.1
+
+# -------------------------
+# Backend / API
+# -------------------------
+fastapi==0.116.2
+uvicorn==0.35.0
+pydantic==2.11.9
+
+# -------------------------
+# UI
+# -------------------------
+streamlit==1.50.0
+streamlit-folium==0.27.4
+folium==0.20.0
+
+# -------------------------
+# Image Processing
+# -------------------------
+Pillow==11.3.0
+
+# -------------------------
+# XML Processing
+# -------------------------
+lxml==6.0.2
+
+# -------------------------
+# Utilities
+# -------------------------
+requests==2.32.5
+PyYAML==6.0.3

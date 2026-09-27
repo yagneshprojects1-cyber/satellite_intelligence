@@ -1,0 +1,74 @@
+{
+  "tiles": {
+    "expected": 983,
+    "actual": 983,
+    "status": "PASS"
+  },
+  "clay_embeddings": {
+    "expected": 983,
+    "actual": 983,
+    "status": "PASS"
+  },
+  "qdrant_clay": {
+    "expected": 983,
+    "actual": 115,
+    "status": "FAIL"
+  },
+  "qdrant_clip": {
+    "expected": 983,
+    "actual": 983,
+    "status": "PASS"
+  },
+  "temporal_pairs": {
+    "expected": 544,
+    "actual": 543,
+    "status": "FAIL"
+  },
+  "change_results": {
+    "expected": ">=0",
+    "actual": 11,
+    "status": "PASS"
+  },
+  "earliest_changes": {
+    "status": "FAIL",
+    "error": "Summary file not found"
+  },
+  "clustering": {
+    "status": "PENDING",
+    "error": "Clustering requires complete Clay embeddings (983/983)"
+  },
+  "embedding_dimensions": {
+    "expected": 1024,
+    "actual": 1024,
+    "status": "PASS"
+  },
+  "metadata_consistency": {
+    "checked": 983,
+    "inconsistent": 0,
+    "status": "PASS"
+  },
+  "tile_id_consistency": {
+    "total_unique": 983,
+    "duplicates": 0,
+    "status": "PASS"
+  },
+  "geospatial_metadata": {
+    "checked": 983,
+    "invalid_bbox": 0,
+    "invalid_coords": 0,
+    "status": "PASS"
+  },
+  "no_duplicate_ids": {
+    "status": "PASS"
+  },
+  "new_modules": {
+    "modules": {
+      "change_classifier": "PASS",
+      "search_filters": "PASS",
+      "export_manager": "PASS",
+      "earliest_change": "PASS",
+      "clustering": "PASS"
+    },
+    "status": "PASS"
+  }
+}
