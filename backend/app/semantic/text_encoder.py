@@ -3,6 +3,10 @@ CLIP Text Encoder for Semantic Search
 Provides text embeddings compatible with CLIP image embeddings
 """
 
+import os
+os.environ["USE_TF"] = "0"
+os.environ["USE_TORCH"] = "1"
+
 import torch
 import numpy as np
 from pathlib import Path

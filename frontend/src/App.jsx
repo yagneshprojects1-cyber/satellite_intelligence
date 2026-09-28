@@ -1,4 +1,4 @@
-import { BrowserRouter as Router, Routes, Route, Link } from 'react-router-dom'
+import { BrowserRouter as Router, Routes, Route, NavLink } from 'react-router-dom'
 import { LayoutDashboard, Search, Image as ImageIcon, Activity, MapPin, Layers, CheckCircle } from 'lucide-react'
 import Dashboard from './pages/Dashboard'
 import SemanticSearch from './pages/SemanticSearch'
@@ -13,34 +13,40 @@ function App() {
   return (
     <Router>
       <div className="app">
-        <nav className="navbar">
-          <Link to="/" className="navbar-brand">
-            SIH Satellite Intelligence
-          </Link>
-          <ul className="navbar-nav">
-            <li><Link to="/"><LayoutDashboard size={20} /> Dashboard</Link></li>
-            <li><Link to="/semantic-search"><Search size={20} /> Semantic Search</Link></li>
-            <li><Link to="/image-search"><ImageIcon size={20} /> Image Search</Link></li>
-            <li><Link to="/change-analysis"><Activity size={20} /> Change Analysis</Link></li>
-            <li><Link to="/earliest-change"><MapPin size={20} /> Earliest Change</Link></li>
-            <li><Link to="/similar-locations"><Layers size={20} /> Similar Locations</Link></li>
-            <li><Link to="/map"><MapPin size={20} /> Map</Link></li>
-            <li><Link to="/analyst-review"><CheckCircle size={20} /> Analyst Review</Link></li>
-          </ul>
-        </nav>
+        <aside className="sidebar">
+          <NavLink to="/" className="sidebar-brand">
+            <span className="brand-mark"><MapPin size={20} /></span>
+            <span>SIH <strong>Satellite Intelligence</strong></span>
+          </NavLink>
+          <div className="sidebar-section-label">Workspace</div>
+          <nav aria-label="Main navigation">
+            <ul className="sidebar-nav">
+              <li><NavLink to="/" end><LayoutDashboard size={19} /> Dashboard</NavLink></li>
+              <li><NavLink to="/semantic-search"><Search size={19} /> Semantic Search</NavLink></li>
+              <li><NavLink to="/image-search"><ImageIcon size={19} /> Image Search</NavLink></li>
+              <li><NavLink to="/change-analysis"><Activity size={19} /> Change Analysis</NavLink></li>
+              <li><NavLink to="/earliest-change"><MapPin size={19} /> Earliest Change</NavLink></li>
+              <li><NavLink to="/similar-locations"><Layers size={19} /> Similar Locations</NavLink></li>
+              <li><NavLink to="/map"><MapPin size={19} /> Map</NavLink></li>
+              <li><NavLink to="/analyst-review"><CheckCircle size={19} /> Analyst Review</NavLink></li>
+            </ul>
+          </nav>
+        </aside>
 
-        <main className="container">
-          <Routes>
-            <Route path="/" element={<Dashboard />} />
-            <Route path="/semantic-search" element={<SemanticSearch />} />
-            <Route path="/image-search" element={<ImageSearch />} />
-            <Route path="/change-analysis" element={<ChangeAnalysis />} />
-            <Route path="/earliest-change" element={<EarliestChange />} />
-            <Route path="/similar-locations" element={<SimilarLocations />} />
-            <Route path="/map" element={<MapView />} />
-            <Route path="/analyst-review" element={<AnalystReview />} />
-          </Routes>
-        </main>
+        <div className="app-content">
+          <main className="container">
+            <Routes>
+              <Route path="/" element={<Dashboard />} />
+              <Route path="/semantic-search" element={<SemanticSearch />} />
+              <Route path="/image-search" element={<ImageSearch />} />
+              <Route path="/change-analysis" element={<ChangeAnalysis />} />
+              <Route path="/earliest-change" element={<EarliestChange />} />
+              <Route path="/similar-locations" element={<SimilarLocations />} />
+              <Route path="/map" element={<MapView />} />
+              <Route path="/analyst-review" element={<AnalystReview />} />
+            </Routes>
+          </main>
+        </div>
       </div>
     </Router>
   )

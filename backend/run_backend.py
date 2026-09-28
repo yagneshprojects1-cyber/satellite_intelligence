@@ -5,6 +5,12 @@ Production-like automatic backend with orchestration layer
 
 import os
 import sys
+
+# Disable TensorFlow in Transformers to prevent protobuf version conflict
+os.environ["USE_TF"] = "0"
+os.environ["USE_TORCH"] = "1"
+os.environ["TF_ENABLE_ONEDNN_OPTS"] = "0"
+
 from pathlib import Path
 from typing import Optional, List, Dict, Any
 from contextlib import asynccontextmanager
