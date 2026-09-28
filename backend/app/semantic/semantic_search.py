@@ -432,6 +432,112 @@ class SemanticSearch:
         
         return results
     
+    def search_by_pil_image(self, 
+                             image: Image.Image, 
+                             top_k: int = 10,
+                             filters: Optional[Dict[str, Any]] = None) -> List[Dict[str, Any]]:
+        """
+        Perform CLIP-based image-to-image similarity search using an uploaded PIL Image.
+        
+        Args:
+            image: PIL Image uploaded by user
+            top_k: Number of results to return
+            filters: Optional metadata filters
+            
+        Returns:
+            List of search results with metadata
+        """
+        if filters:
+            is_valid, errors = SearchFilters.validate_filters(filters)
+            if not is_valid:
+                raise ValueError(f"Invalid filters: {', '.join(errors)}")
+        
+        # Setup CLIP model
+        self._setup_clip_model()
+        
+        # Robust normalization for RGB / RGBA / grayscale / 16-bit TIFF Sentinel-2 bands
+        try:
+            arr = np.array(image, dtype=np.float32)
+            if arr.ndim == 2:
+                p2, p98 = np.percentile(arr, (2, 98))
+                if p98 - p2 > 0:
+                    arr = (arr - p2) / (p98 - p2)
+                arr = np.clip(arr, 0, 1)
+                arr = (arr * 255).astype(np.uint8)
+                arr = np.stack([arr, arr, arr], axis=-1)
+                image = Image.fromarray(arr)
+            elif arr.ndim == 3:
+                if arr.shape[2] > 3:
+                    arr = arr[:, :, :3]
+                normalized_bands = []
+                for b in range(arr.shape[2]):
+                    band = arr[:, :, b]
+                    p2, p98 = np.percentile(band, (2, 98))
+                    if p98 - p2 > 0:
+                        band = (band - p2) / (p98 - p2)
+                    band = np.clip(band, 0, 1)
+                    normalized_bands.append((band * 255).astype(np.uint8))
+                if len(normalized_bands) == 1:
+                    arr = np.stack([normalized_bands[0]] * 3, axis=-1)
+                elif len(normalized_bands) == 2:
+                    arr = np.stack([normalized_bands[0], normalized_bands[1], normalized_bands[0]], axis=-1)
+                else:
+                    arr = np.stack(normalized_bands[:3], axis=-1)
+                image = Image.fromarray(arr)
+            else:
+                image = image.convert('RGB')
+        except Exception:
+            image = image.convert('RGB')
+            
+        query_embedding = self._encode_image(image)
+        
+        info = self.qdrant_manager.get_collection_info()
+        expected_dim = info.config.params.vectors.size
+        if len(query_embedding) != expected_dim:
+            raise ValueError(
+                f"Image embedding dimension {len(query_embedding)} does not match "
+                f"CLIP collection dimension {expected_dim}"
+            )
+            
+        qdrant_filter = SearchFilters.build_qdrant_filter(filters)
+        requested_k = top_k * 2 if filters else top_k
+        qdrant_results = self.qdrant_manager.search_similar(
+            query_vector=query_embedding.tolist(),
+            top_k=requested_k,
+            filter_conditions=qdrant_filter
+        )
+        
+        points = qdrant_results if isinstance(qdrant_results, list) else getattr(qdrant_results, 'points', [])
+        
+        results = []
+        for i, point in enumerate(points):
+            payload = point.payload
+            enriched_result = {
+                "rank": i + 1,
+                "tile_id": payload.get("tile_id", ""),
+                "similarity": point.score,
+                "date": payload.get("date", ""),
+                "latitude": payload.get("latitude", 0.0),
+                "longitude": payload.get("longitude", 0.0),
+                "bbox": payload.get("bbox", {}),
+                "sensor": payload.get("sensor", ""),
+                "source_scene": payload.get("source_scene", ""),
+                "valid_percentage": payload.get("valid_percentage", 0.0),
+                "tile_path": payload.get("tile_path", ""),
+                "embedding_model": payload.get("embedding_model", ""),
+                "embedding_type": payload.get("embedding_type", "")
+            }
+            results.append(enriched_result)
+            
+        if filters:
+            results = SearchFilters.apply_post_search_filters(results, filters)
+            
+        results = results[:top_k]
+        for i, result in enumerate(results):
+            result["rank"] = i + 1
+            
+        return results
+
     def get_tile_image_path(self, tile_id: str, year: str) -> Path:
         """
         Get the path to a tile's directory.

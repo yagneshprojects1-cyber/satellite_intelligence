@@ -1,15 +1,12 @@
 import { useState, useEffect } from 'react'
 import { getChangeAnalysis } from '../services/api'
-import { Activity, AlertTriangle } from 'lucide-react'
+import { Activity, AlertTriangle, Calendar, TrendingUp, Cpu } from 'lucide-react'
 
 function ChangeAnalysis() {
   const [changes, setChanges] = useState([])
   const [loading, setLoading] = useState(true)
-  const [selectedChange, setSelectedChange] = useState(null)
 
-  useEffect(() => {
-    loadChanges()
-  }, [])
+  useEffect(() => { loadChanges() }, [])
 
   const loadChanges = async () => {
     try {
@@ -22,11 +19,17 @@ function ChangeAnalysis() {
     }
   }
 
+  const getChangeColor = (pct) => {
+    if (pct >= 40) return '#ef4444'
+    if (pct >= 15) return '#f59e0b'
+    return '#10b981'
+  }
+
   if (loading) {
     return (
-      <div className="card">
-        <div className="spinner"></div>
-        <p style={{ marginTop: '1rem' }}>Loading change analysis...</p>
+      <div className="card" style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+        <div className="spinner" />
+        <p>Loading change analysis…</p>
       </div>
     )
   }
@@ -34,92 +37,75 @@ function ChangeAnalysis() {
   return (
     <div className="fade-in">
       <h1>Change Analysis</h1>
-      <p style={{ color: '#9ca3af', marginBottom: '2rem' }}>
+      <p style={{ color: '#9ca3af', marginBottom: '1.75rem', fontSize: '0.9rem' }}>
         Detected changes between temporal image pairs
       </p>
 
       {changes.length === 0 ? (
-        <div className="card">
-          <div style={{ textAlign: 'center', padding: '2rem' }}>
-            <AlertTriangle size={48} color="#fbbf24" style={{ marginBottom: '1rem' }} />
-            <p>No change results available</p>
-            <p style={{ fontSize: '0.875rem', color: '#9ca3af' }}>
-              Run change detection job to generate results
-            </p>
-          </div>
+        <div className="card" style={{ textAlign: 'center', padding: '3rem' }}>
+          <AlertTriangle size={36} color="#fbbf24" style={{ marginBottom: '0.85rem', opacity: 0.8 }} />
+          <p style={{ fontWeight: 500, marginBottom: '0.35rem' }}>No change results available</p>
+          <p style={{ fontSize: '0.83rem', color: '#9ca3af' }}>Run the change detection job to generate results</p>
         </div>
       ) : (
         <div className="search-results">
-          {changes.map((change, index) => (
-            <div key={index} className="result-card" onClick={() => setSelectedChange(change)}>
-              <div className="result-content">
-                <div className="result-title">
-                  <Activity size={18} style={{ marginRight: '0.5rem' }} />
-                  {change.pair_id}
-                </div>
-                <div className="result-meta">Before: {change.before_date}</div>
-                <div className="result-meta">After: {change.after_date}</div>
-                <div className="result-similarity">
-                  Change: {change.change_percentage.toFixed(1)}%
-                </div>
-                <div className="result-meta">
-                  Confidence: {(change.confidence * 100).toFixed(1)}%
-                </div>
-                <div className="result-meta">Model: {change.model_used}</div>
-                {change.change_type && (
-                  <div className="result-meta" style={{ color: '#60a5fa' }}>
-                    Type: {change.change_type}
-                  </div>
-                )}
-              </div>
-            </div>
-          ))}
-        </div>
-      )}
+          {changes.map((change, index) => {
+            const color = getChangeColor(change.change_percentage)
+            const confPct = ((change.confidence || 0) * 100).toFixed(1)
 
-      {selectedChange && (
-        <div className="card" style={{ marginTop: '2rem' }}>
-          <h2 className="card-header">Change Details: {selectedChange.pair_id}</h2>
-          <div className="change-comparison">
-            <div>
-              <h3 style={{ marginBottom: '0.5rem' }}>Before Image</h3>
-              <div className="change-image" style={{ 
-                background: 'linear-gradient(135deg, #1a1a2e 0%, #16213e 100%)',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center'
-              }}>
-                <span style={{ color: '#9ca3af' }}>{selectedChange.before_date}</span>
+            return (
+              <div key={change.pair_id || index} className="result-card">
+                <div className="result-content">
+                  {/* Pair ID */}
+                  <div style={{
+                    fontFamily: 'monospace', fontSize: '0.82rem', fontWeight: 600,
+                    color: '#f1f5f9', marginBottom: '0.9rem',
+                    whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis'
+                  }}>
+                    {change.pair_id}
+                  </div>
+
+                  {/* Change bar */}
+                  <div style={{ marginBottom: '0.85rem' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.75rem', color: '#64748b', marginBottom: '0.25rem' }}>
+                      <span>Change</span>
+                      <span style={{ color, fontWeight: 600 }}>{change.change_percentage.toFixed(1)}%</span>
+                    </div>
+                    <div style={{ height: 3, background: 'rgba(255,255,255,0.07)', borderRadius: 999, overflow: 'hidden' }}>
+                      <div style={{
+                        height: '100%', width: `${Math.min(100, change.change_percentage)}%`,
+                        background: color, borderRadius: 999, transition: 'width 0.5s ease'
+                      }} />
+                    </div>
+                  </div>
+
+                  {/* Meta */}
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '0.35rem' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', fontSize: '0.79rem', color: '#94a3b8' }}>
+                      <Calendar size={11} style={{ color: '#475569', flexShrink: 0 }} />
+                      {change.before_date} → {change.after_date}
+                    </div>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', fontSize: '0.79rem', color: '#94a3b8' }}>
+                      <TrendingUp size={11} style={{ color: '#475569', flexShrink: 0 }} />
+                      Confidence: <strong style={{ color: '#60a5fa' }}>{confPct}%</strong>
+                    </div>
+                    {change.model_used && (
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', fontSize: '0.79rem', color: '#94a3b8' }}>
+                        <Cpu size={11} style={{ color: '#475569', flexShrink: 0 }} />
+                        {change.model_used}
+                      </div>
+                    )}
+                    {change.change_type && (
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', fontSize: '0.79rem', color: '#60a5fa' }}>
+                        <Activity size={11} style={{ color: '#475569', flexShrink: 0 }} />
+                        {change.change_type}
+                      </div>
+                    )}
+                  </div>
+                </div>
               </div>
-            </div>
-            <div>
-              <h3 style={{ marginBottom: '0.5rem' }}>After Image</h3>
-              <div className="change-image" style={{ 
-                background: 'linear-gradient(135deg, #1a1a2e 0%, #16213e 100%)',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center'
-              }}>
-                <span style={{ color: '#9ca3af' }}>{selectedChange.after_date}</span>
-              </div>
-            </div>
-          </div>
-          <div>
-            <h3 style={{ marginBottom: '0.5rem' }}>Change Mask</h3>
-            <div className="change-mask" style={{ 
-              background: 'linear-gradient(135deg, #1a1a2e 0%, #16213e 100%)',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center'
-            }}>
-              <span style={{ color: '#9ca3af' }}>Change mask visualization</span>
-            </div>
-          </div>
-          <div style={{ marginTop: '1rem' }}>
-            <button className="btn btn-secondary" onClick={() => setSelectedChange(null)}>
-              Close
-            </button>
-          </div>
+            )
+          })}
         </div>
       )}
     </div>

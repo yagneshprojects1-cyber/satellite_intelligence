@@ -36,10 +36,16 @@ export const semanticSearch = async (query, topK = 10, filters = null) => {
   return response.data
 }
 
-export const imageSearch = async (tileId, topK = 10, filters = null) => {
-  const response = await api.post('/image-search', { tile_id: tileId, top_k: topK, filters })
+export const imageSearchFile = async (file, topK = 10) => {
+  const form = new FormData()
+  form.append('image', file)
+  form.append('top_k', topK)
+  const response = await api.post('/image-search', form, {
+    headers: { 'Content-Type': 'multipart/form-data' },
+  })
   return response.data
 }
+
 
 // Change Analysis
 export const getChangeAnalysis = async () => {
@@ -59,9 +65,27 @@ export const getSimilarLocations = async (tileId, topK = 10) => {
   return response.data
 }
 
-// Tiles
+export const similarLocationsFile = async (file, topK = 10) => {
+  const form = new FormData()
+  form.append('image', file)
+  form.append('top_k', topK)
+  const response = await api.post('/similar-locations', form, {
+    headers: { 'Content-Type': 'multipart/form-data' },
+  })
+  return response.data
+}
+
+// Tiles & Map
 export const getTile = async (tileId) => {
   const response = await api.get(`/tiles/${tileId}`)
+  return response.data
+}
+
+export const getMapData = async (year = null, limit = 300) => {
+  const params = new URLSearchParams()
+  if (year) params.append('year', year)
+  if (limit) params.append('limit', limit)
+  const response = await api.get(`/map-data?${params.toString()}`)
   return response.data
 }
 

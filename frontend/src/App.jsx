@@ -14,9 +14,12 @@ function App() {
     <Router>
       <div className="app">
         <aside className="sidebar">
-          <NavLink to="/" className="sidebar-brand">
-            <span className="brand-mark"><MapPin size={20} /></span>
-            <span>SIH <strong>Satellite Intelligence</strong></span>
+          <NavLink to="/" className="sidebar-brand" style={{ padding: '0.75rem 1rem', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
+            <img
+              src="/logo.png"
+              alt="SIH Satellite Intelligence"
+              style={{ height: '78px', width: '100%', objectFit: 'contain' }}
+            />
           </NavLink>
           <div className="sidebar-section-label">Workspace</div>
           <nav aria-label="Main navigation">
