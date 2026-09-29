@@ -39,15 +39,16 @@ class SearchFilters:
         must_conditions = []
         
         # Year filter
-        if 'year' in filters:
+        if 'year' in filters and filters['year']:
             must_conditions.append(
                 FieldCondition(key='year', match=MatchValue(value=str(filters['year'])))
             )
         
         # Sensor filter
-        if 'sensor' in filters:
+        if 'sensor' in filters and filters['sensor']:
+            s_val = "Sentinel-2" if "sentinel" in str(filters['sensor']).lower() else str(filters['sensor'])
             must_conditions.append(
-                FieldCondition(key='sensor', match=MatchValue(value=filters['sensor']))
+                FieldCondition(key='sensor', match=MatchValue(value=s_val))
             )
         
         # Minimum valid percentage filter
@@ -98,62 +99,67 @@ class SearchFilters:
         filtered_results = []
         
         for result in results:
+            # Apply Year filter
+            if 'year' in filters and filters['year']:
+                y_str = str(filters['year']).strip()
+                res_year = str(result.get('year') or result.get('date', '')[:4] or result.get('tile_id', '')[:4])
+                if y_str not in res_year:
+                    continue
+                    
+            # Apply Sensor filter
+            if 'sensor' in filters and filters['sensor']:
+                s_str = str(filters['sensor']).strip().lower()
+                res_sensor = str(result.get('sensor', '')).strip().lower()
+                if s_str not in res_sensor and res_sensor not in s_str:
+                    continue
+
             # Apply minimum similarity filter
-            if 'min_similarity' in filters:
-                if result.get('similarity', 0.0) < filters['min_similarity']:
+            if 'min_similarity' in filters and filters['min_similarity'] is not None:
+                if result.get('similarity', 0.0) < float(filters['min_similarity']):
                     continue
             
             # Apply minimum valid percentage filter
-            if 'min_valid_percentage' in filters:
-                if result.get('valid_percentage', 0.0) < filters['min_valid_percentage']:
+            if 'min_valid_percentage' in filters and filters['min_valid_percentage'] is not None:
+                if float(result.get('valid_percentage', 0.0)) < float(filters['min_valid_percentage']):
                     continue
             
-            # Apply date range filter
-            if 'date_start' in filters or 'date_end' in filters:
+            # Apply date range filter (supports date_start/date_end or date_range dict)
+            d_start = filters.get('date_start') or (filters.get('date_range', {}).get('start') if isinstance(filters.get('date_range'), dict) else None)
+            d_end = filters.get('date_end') or (filters.get('date_range', {}).get('end') if isinstance(filters.get('date_range'), dict) else None)
+            
+            if d_start or d_end:
                 result_date = result.get('date', '')
                 if result_date:
                     try:
                         result_dt = datetime.strptime(result_date, '%Y-%m-%d')
-                        
-                        if 'date_start' in filters:
-                            start_dt = datetime.strptime(filters['date_start'], '%Y-%m-%d')
+                        if d_start and d_start.strip():
+                            start_dt = datetime.strptime(d_start.strip(), '%Y-%m-%d')
                             if result_dt < start_dt:
                                 continue
-                        
-                        if 'date_end' in filters:
-                            end_dt = datetime.strptime(filters['date_end'], '%Y-%m-%d')
+                        if d_end and d_end.strip():
+                            end_dt = datetime.strptime(d_end.strip(), '%Y-%m-%d')
                             if result_dt > end_dt:
                                 continue
-                    except ValueError:
-                        # Skip if date parsing fails
-                        continue
+                    except Exception:
+                        pass
             
-            # Apply latitude range filter
-            if 'lat_min' in filters or 'lat_max' in filters:
-                lat = result.get('latitude', 0.0)
-                
-                if 'lat_min' in filters and lat < filters['lat_min']:
-                    continue
-                if 'lat_max' in filters and lat > filters['lat_max']:
-                    continue
+            # Apply latitude/longitude & bounding box filters
+            lat = float(result.get('latitude', 0.0))
+            lon = float(result.get('longitude', 0.0))
             
-            # Apply longitude range filter
-            if 'lon_min' in filters or 'lon_max' in filters:
-                lon = result.get('longitude', 0.0)
-                
-                if 'lon_min' in filters and lon < filters['lon_min']:
-                    continue
-                if 'lon_max' in filters and lon > filters['lon_max']:
-                    continue
+            min_lat = filters.get('lat_min') or (filters.get('bbox', {}).get('min_lat') if isinstance(filters.get('bbox'), dict) else None)
+            max_lat = filters.get('lat_max') or (filters.get('bbox', {}).get('max_lat') if isinstance(filters.get('bbox'), dict) else None)
+            min_lon = filters.get('lon_min') or (filters.get('bbox', {}).get('min_lon') if isinstance(filters.get('bbox'), dict) else None)
+            max_lon = filters.get('lon_max') or (filters.get('bbox', {}).get('max_lon') if isinstance(filters.get('bbox'), dict) else None)
             
-            # Apply bounding box filter
-            if 'bbox' in filters:
-                bbox = filters['bbox']
-                result_bbox = result.get('bbox', {})
-                
-                # Check if result bbox intersects with filter bbox
-                if not SearchFilters._bbox_intersects(result_bbox, bbox):
-                    continue
+            if min_lat is not None and lat < float(min_lat):
+                continue
+            if max_lat is not None and lat > float(max_lat):
+                continue
+            if min_lon is not None and lon < float(min_lon):
+                continue
+            if max_lon is not None and lon > float(max_lon):
+                continue
             
             filtered_results.append(result)
         
@@ -225,7 +231,7 @@ class SearchFilters:
     @staticmethod
     def validate_filters(filters: Dict[str, Any]) -> Tuple[bool, List[str]]:
         """
-        Validate filter configuration.
+        Validate filter configuration gracefully supporting string and float formats.
         
         Args:
             filters: Dictionary of filter conditions
@@ -234,64 +240,48 @@ class SearchFilters:
             Tuple of (is_valid, list of error messages)
         """
         errors = []
+        if not filters:
+            return True, []
+            
+        # Clean empty string filters
+        cleaned_filters = {k: v for k, v in filters.items() if v is not None and v != ''}
         
         # Validate year
-        if 'year' in filters:
-            year = filters['year']
-            if not isinstance(year, int) or year < 2000 or year > 2100:
-                errors.append(f"Invalid year: {year}")
+        if 'year' in cleaned_filters:
+            year_val = cleaned_filters['year']
+            try:
+                year_int = int(year_val)
+                if year_int < 2000 or year_int > 2100:
+                    errors.append(f"Invalid year: {year_val}")
+            except (ValueError, TypeError):
+                errors.append(f"Invalid year format: {year_val}")
         
         # Validate date range
-        if 'date_start' in filters:
-            try:
-                datetime.strptime(filters['date_start'], '%Y-%m-%d')
-            except ValueError:
-                errors.append(f"Invalid date_start format: {filters['date_start']}")
+        d_start = cleaned_filters.get('date_start') or (cleaned_filters.get('date_range', {}).get('start') if isinstance(cleaned_filters.get('date_range'), dict) else None)
+        d_end = cleaned_filters.get('date_end') or (cleaned_filters.get('date_range', {}).get('end') if isinstance(cleaned_filters.get('date_range'), dict) else None)
         
-        if 'date_end' in filters:
+        if d_start and str(d_start).strip():
             try:
-                datetime.strptime(filters['date_end'], '%Y-%m-%d')
+                datetime.strptime(str(d_start).strip(), '%Y-%m-%d')
             except ValueError:
-                errors.append(f"Invalid date_end format: {filters['date_end']}")
+                errors.append(f"Invalid date_start format: {d_start}")
         
-        if 'date_start' in filters and 'date_end' in filters:
-            start_dt = datetime.strptime(filters['date_start'], '%Y-%m-%d')
-            end_dt = datetime.strptime(filters['date_end'], '%Y-%m-%d')
-            if start_dt > end_dt:
-                errors.append("date_start must be before date_end")
+        if d_end and str(d_end).strip():
+            try:
+                datetime.strptime(str(d_end).strip(), '%Y-%m-%d')
+            except ValueError:
+                errors.append(f"Invalid date_end format: {d_end}")
         
         # Validate valid percentage
-        if 'min_valid_percentage' in filters:
-            pct = filters['min_valid_percentage']
-            if not isinstance(pct, (int, float)) or pct < 0 or pct > 100:
-                errors.append(f"Invalid min_valid_percentage: {pct}")
+        if 'min_valid_percentage' in cleaned_filters:
+            try:
+                pct = float(cleaned_filters['min_valid_percentage'])
+                if pct < 0 or pct > 100:
+                    errors.append(f"Invalid min_valid_percentage: {pct}")
+            except (ValueError, TypeError):
+                errors.append(f"Invalid min_valid_percentage format: {cleaned_filters['min_valid_percentage']}")
         
-        # Validate similarity
-        if 'min_similarity' in filters:
-            sim = filters['min_similarity']
-            if not isinstance(sim, (int, float)) or sim < 0 or sim > 1:
-                errors.append(f"Invalid min_similarity: {sim}")
-        
-        # Validate latitude range
-        if 'lat_min' in filters:
-            lat_min = filters['lat_min']
-            if not isinstance(lat_min, (int, float)) or lat_min < -90 or lat_min > 90:
-                errors.append(f"Invalid lat_min: {lat_min}")
-        
-        if 'lat_max' in filters:
-            lat_max = filters['lat_max']
-            if not isinstance(lat_max, (int, float)) or lat_max < -90 or lat_max > 90:
-                errors.append(f"Invalid lat_max: {lat_max}")
-        
-        if 'lat_min' in filters and 'lat_max' in filters:
-            if filters['lat_min'] > filters['lat_max']:
-                errors.append("lat_min must be less than lat_max")
-        
-        # Validate longitude range
-        if 'lon_min' in filters:
-            lon_min = filters['lon_min']
-            if not isinstance(lon_min, (int, float)) or lon_min < -180 or lon_min > 180:
-                errors.append(f"Invalid lon_min: {lon_min}")
+        return len(errors) == 0, errors
         
         if 'lon_max' in filters:
             lon_max = filters['lon_max']

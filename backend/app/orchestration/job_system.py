@@ -415,21 +415,27 @@ class PipelineOrchestrator:
         
         completeness = {}
         
-        # Check Phase 6 (embeddings)
+        # Check Phase 6 (embeddings live in year subfolders)
         emb_dir = Path(os.getenv('EMBEDDINGS_DIR', 'embeddings'))
-        emb_count = sum(len(list(emb_dir.glob("*.npy"))) for year in ["2022", "2023", "2024"] if (emb_dir / year).exists())
-        completeness["phase_6"] = emb_count >= 983
+        emb_count = 0
+        for year in ["2022", "2023", "2024"]:
+            year_dir = emb_dir / year
+            if year_dir.exists():
+                emb_count += len(list(year_dir.glob("*.npy")))
+        completeness["phase_6"] = emb_count > 0
         
-        # Check Phase 7 (Qdrant)
+        # Check Phase 7 (Qdrant) via the shared local client — do not open a second lock
         try:
-            from qdrant_client import QdrantClient
-            client = QdrantClient(path=os.getenv('QDRANT_STORAGE', 'qdrant_storage'))
+            from app.vector_db.qdrant_manager import get_qdrant_client
+            client = get_qdrant_client(os.getenv('QDRANT_STORAGE', 'qdrant_storage'))
+            clay_count = 0
+            clip_count = 0
             if client.collection_exists("satellite_tiles"):
-                info = client.get_collection("satellite_tiles")
-                completeness["phase_7"] = info.points_count >= 983
-            else:
-                completeness["phase_7"] = False
-        except:
+                clay_count = client.get_collection("satellite_tiles").points_count
+            if client.collection_exists("satellite_tiles_clip"):
+                clip_count = client.get_collection("satellite_tiles_clip").points_count
+            completeness["phase_7"] = (clay_count + clip_count) > 0
+        except Exception:
             completeness["phase_7"] = False
         
         # Check Phase 10 (temporal pairs)

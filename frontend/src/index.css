@@ -370,8 +370,17 @@ body {
   to { opacity: 1; transform: translateY(0); }
 }
 
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to   { transform: rotate(360deg); }
+}
+
 .fade-in {
   animation: fadeIn 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+.spin {
+  animation: spin 1s linear infinite;
 }
 
 /* Utilities */
@@ -454,3 +463,343 @@ body {
 .custom-marker-pin:hover {
   transform: scale(1.2);
 }
+
+/* Hero banner — dark mode default */
+.hero-banner {
+  background: linear-gradient(135deg, rgba(30, 41, 59, 0.85) 0%, rgba(15, 23, 42, 0.95) 100%);
+}
+.hero-banner h1,
+.hero-banner p,
+.hero-banner span {
+  color: #f8fafc;
+}
+
+/* Drop zone — base */
+.dropzone-area {
+  color: inherit;
+}
+
+/* ================================================================
+   LIGHT THEME — complete override
+   ================================================================ */
+body.light-theme {
+  --bg-gradient: linear-gradient(135deg, #f0f4f8 0%, #e2e8f0 100%);
+  --glass-bg: #ffffff;
+  --glass-border: #d1d9e0;
+  --glass-shadow: 0 2px 12px rgba(0, 0, 0, 0.07);
+  color: #1e293b;
+  background: var(--bg-gradient);
+}
+
+/* All text that was written with literal dark colors */
+body.light-theme,
+body.light-theme p,
+body.light-theme span,
+body.light-theme div,
+body.light-theme li {
+  color: inherit;
+}
+
+/* Page headings */
+body.light-theme h1,
+body.light-theme h2,
+body.light-theme h3,
+body.light-theme h4 {
+  color: #0f172a !important;
+}
+
+/* Body background */
+body.light-theme .app-content,
+body.light-theme main {
+  background: transparent;
+}
+
+/* Hero banner light theme */
+body.light-theme .hero-banner {
+  background: linear-gradient(135deg, #1e3a5f 0%, #0f2744 100%) !important;
+}
+body.light-theme .hero-banner h1,
+body.light-theme .hero-banner h2,
+body.light-theme .hero-banner h3,
+body.light-theme .hero-banner p,
+body.light-theme .hero-banner span {
+  color: #f0f9ff !important;
+}
+
+/* ---- Sidebar ---- */
+body.light-theme .sidebar {
+  background: #ffffff;
+  border-right: 1px solid #e2e8f0;
+}
+
+body.light-theme .sidebar-section-label {
+  color: #94a3b8;
+}
+
+body.light-theme .sidebar-nav a {
+  color: #475569;
+}
+
+body.light-theme .sidebar-nav a:hover {
+  background: #f1f5f9;
+  color: #0f172a;
+}
+
+body.light-theme .sidebar-nav a.active {
+  background: #eff6ff;
+  color: #2563eb;
+  box-shadow: inset 2px 0 #2563eb;
+}
+
+body.light-theme .sidebar-nav a.active svg {
+  color: #2563eb;
+}
+
+body.light-theme .sidebar-footer {
+  border-top-color: #e2e8f0;
+}
+
+/* ---- Cards ---- */
+body.light-theme .card {
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.06);
+}
+
+body.light-theme .card:hover {
+  box-shadow: 0 6px 24px rgba(0, 0, 0, 0.1);
+}
+
+/* ---- Buttons ---- */
+body.light-theme .btn-secondary {
+  background: #f8fafc;
+  color: #334155;
+  border: 1px solid #cbd5e1;
+}
+
+body.light-theme .btn-secondary:hover {
+  background: #f1f5f9;
+  border-color: #94a3b8;
+}
+
+/* ---- Inputs ---- */
+body.light-theme .form-control,
+body.light-theme input[type="text"],
+body.light-theme input[type="number"],
+body.light-theme textarea,
+body.light-theme select {
+  background: #ffffff;
+  border-color: #cbd5e1;
+  color: #0f172a;
+}
+
+body.light-theme .form-control:focus,
+body.light-theme input:focus,
+body.light-theme textarea:focus {
+  background: #ffffff;
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15);
+}
+
+/* ---- Result / search cards ---- */
+body.light-theme .result-card {
+  background: #ffffff;
+  border-color: #e2e8f0;
+}
+
+/* ALL text inside cards defaults to dark in light mode */
+body.light-theme .card,
+body.light-theme .card p,
+body.light-theme .card span:not([class]),
+body.light-theme .card div,
+body.light-theme .card label {
+  color: #1e293b;
+}
+
+/* Drop zone text visible in light mode */
+body.light-theme .dropzone-area {
+  color: #1e293b !important;
+}
+body.light-theme .dropzone-area p {
+  color: #1e293b !important;
+}
+
+/* ---- Inline dark background rows (diagnostic rows, metric rows) ---- */
+body.light-theme [style*="rgba(255,255,255,0.025)"],
+body.light-theme [style*="rgba(255, 255, 255, 0.025)"],
+body.light-theme [style*="rgba(255,255,255,0.02)"],
+body.light-theme [style*="rgba(255, 255, 255, 0.02)"],
+body.light-theme [style*="rgba(255,255,255,0.03)"] {
+  background: #f8fafc !important;
+}
+
+/* Make inline rgba borders visible */
+body.light-theme [style*="rgba(255,255,255,0.05)"],
+body.light-theme [style*="rgba(255,255,255,0.06)"],
+body.light-theme [style*="rgba(255,255,255,0.07)"],
+body.light-theme [style*="rgba(255,255,255,0.08)"],
+body.light-theme [style*="rgba(255,255,255,0.1)"] {
+  border-color: #e2e8f0 !important;
+}
+
+/* Dark inner panel backgrounds (metrics, compare grid) */
+body.light-theme [style*="background: #0f172a"],
+body.light-theme [style*="background:#0f172a"] {
+  background: #f1f5f9 !important;
+  border-color: #d1d9e0 !important;
+}
+
+body.light-theme [style*="background: #1e293b"],
+body.light-theme [style*="background:#1e293b"] {
+  background: #ffffff !important;
+}
+
+body.light-theme [style*="background: rgba(0,0,0,0.15)"],
+body.light-theme [style*="background: rgba(0, 0, 0, 0.15)"] {
+  background: #f8fafc !important;
+}
+
+/* ————— Hex-based + rgb()-based matches (browsers serialize inline styles inconsistently) ————— */
+body.light-theme [style*="color: #f8fafc"],
+body.light-theme [style*="color: #f1f5f9"],
+body.light-theme [style*="color: #e2e8f0"],
+body.light-theme [style*="color: rgb(248, 250, 252)"],
+body.light-theme [style*="color: rgb(241, 245, 249)"],
+body.light-theme [style*="color: rgb(226, 232, 240)"] {
+  color: #0f172a !important;
+}
+
+body.light-theme [style*="color: #94a3b8"],
+body.light-theme [style*="color: #64748b"],
+body.light-theme [style*="color: rgb(148, 163, 184)"],
+body.light-theme [style*="color: rgb(100, 116, 139)"] {
+  color: #475569 !important;
+}
+
+body.light-theme [style*="color: #475569"],
+body.light-theme [style*="color: rgb(71, 85, 105)"] {
+  color: #334155 !important;
+}
+
+/* ————— Structural rules for headings / prominent text inside cards —————
+   These are the elements that were showing near-invisible light text on
+   light background (sector names, component titles, queue status, etc.).
+   These do not depend on matching inline colour strings.                   */
+body.light-theme .result-card > div:first-child > div > div > div:first-child,
+body.light-theme .result-content > div:first-child > div:first-child > div:nth-child(2) > div:first-child,
+body.light-theme .card > div:first-child > div:nth-child(2) > div,
+body.light-theme [class*="result-card"] [style*="fontWeight: 700"],
+body.light-theme .result-card [style*="font-weight: 700"],
+body.light-theme .result-title {
+  color: #0f172a !important;
+}
+
+/* Coverage / secondary meta info on result cards (slate but not too light) */
+body.light-theme .result-card [style*="font-size: 0.72rem"],
+body.light-theme .result-content [style*="font-size: 0.8rem"],
+body.light-theme .result-content [style*="font-size: .8rem"],
+body.light-theme .result-meta {
+  color: #475569 !important;
+}
+
+/* Health check section titles (Environment, Database…) */
+body.light-theme .card > div > div:first-child > div:first-child > div:nth-child(2),
+body.light-theme [style*="Subsystem Diagnostics"] + div [style*="textTransform: capitalize"] {
+  color: #0f172a !important;
+}
+
+/* "All queues clear" and queue section headings */
+body.light-theme .card > div > div:first-child + div p:first-child,
+body.light-theme [style*="Active Processing Queue"] + div > div > p:first-child {
+  color: #0f172a !important;
+}
+
+/* ————— Image overlays (dark rounded pills on top of satellite imagery) —————
+   "Baseline Imagery", "Detected Anomaly", BEFORE/AFTER date labels, etc.
+   These live inside a dark semi-transparent background (rgba(0,0,0,0.6) or
+   rgba(15,23,42,0.85)) so they MUST retain LIGHT foreground even in light theme.
+   These rules override the blanket darkening above via specificity.                  */
+body.light-theme [style*="background: rgba(0, 0, 0, 0.6)"],
+body.light-theme [style*="background: rgba(0,0,0,0.6)"],
+body.light-theme [style*="background: rgba(0,0,0,0.75)"],
+body.light-theme [style*="background: rgba(0, 0, 0, 0.75)"],
+body.light-theme [style*="background: rgba(15, 23, 42, 0.85)"],
+body.light-theme [style*="background: rgba(15,23,42,0.85)"] {
+  color: #e2e8f0 !important;
+}
+
+/* Also force the text inside these overlays back to light (via child combinator).
+   Any direct text in an absolutely-positioned overlay on an image stays light. */
+body.light-theme [style*="position: absolute"][style*="bottom: 8"],
+body.light-theme [style*="position: absolute"][style*="top: 10"] {
+  color: #f0f9ff !important;
+}
+
+body.light-theme [style*="rgba(0,0,0,0.6)"] span,
+body.light-theme [style*="rgba(15,23,42,0.85)"] span {
+  color: inherit !important;
+}
+
+/* Status badge & accent text — keep colored, match both hex + rgb serializations */
+body.light-theme [style*="color: #22c55e"],
+body.light-theme [style*="color: rgb(34, 197, 94)"]  { color: #16a34a !important; }
+body.light-theme [style*="color: #ef4444"],
+body.light-theme [style*="color: rgb(239, 68, 68)"]  { color: #dc2626 !important; }
+body.light-theme [style*="color: #3b82f6"],
+body.light-theme [style*="color: rgb(59, 130, 246)"],
+body.light-theme [style*="color: #60a5fa"],
+body.light-theme [style*="color: rgb(96, 165, 250)"] { color: #2563eb !important; }
+body.light-theme [style*="color: #a855f7"],
+body.light-theme [style*="color: rgb(168, 85, 247)"] { color: #9333ea !important; }
+body.light-theme [style*="color: #10b981"],
+body.light-theme [style*="color: rgb(16, 185, 129)"] { color: #059669 !important; }
+body.light-theme [style*="color: #f59e0b"],
+body.light-theme [style*="color: rgb(245, 158, 11)"] { color: #d97706 !important; }
+body.light-theme [style*="color: #06b6d4"],
+body.light-theme [style*="color: rgb(6, 182, 212)"],
+body.light-theme [style*="color: #38bdf8"],
+body.light-theme [style*="color: rgb(56, 189, 248)"] { color: #0891b2 !important; }
+
+/* Before/After image containers in change analysis */
+body.light-theme [style*="background: #0f172a"],
+body.light-theme [style*="background: rgba(15, 23, 42"] {
+  background: #e2e8f0 !important;
+}
+
+/* Range input */
+body.light-theme input[type="range"] {
+  background: #e2e8f0;
+}
+
+/* Spinner */
+body.light-theme .spinner {
+  border-color: #e2e8f0;
+  border-top-color: #3b82f6;
+}
+
+/* Fade-in animation still works */
+body.light-theme .fade-in {
+  animation: fadeIn 0.3s ease;
+}
+
+/* ————— Accent-colored image overlay captions —————
+   BEFORE/AFTER date pills inside dark rgba(0,0,0,0.75) or (15,23,42,0.85)
+   overlays must stay bright/cyan — the darkening rules above would make them
+   invisible on their dark background. Override via context specificity.      */
+body.light-theme [style*="background: rgba(0,0,0,0.75)"][style*="color: #94a3b8"],
+body.light-theme [style*="background: rgba(0, 0, 0, 0.75)"][style*="color: rgb(148, 163, 184)"] {
+  color: #cbd5e1 !important;
+}
+body.light-theme [style*="background: rgba(0,0,0,0.75)"][style*="color: #06b6d4"],
+body.light-theme [style*="background: rgba(0, 0, 0, 0.75)"][style*="color: rgb(6, 182, 212)"] {
+  color: #22d3ee !important;
+}
+body.light-theme [style*="background: rgba(15,23,42,0.85)"][style*="color: #94a3b8"],
+body.light-theme [style*="background: rgba(15, 23, 42, 0.85)"][style*="color: rgb(148, 163, 184)"] {
+  color: #cbd5e1 !important;
+}
+body.light-theme [style*="background: rgba(15,23,42,0.85)"][style*="color: #06b6d4"],
+body.light-theme [style*="background: rgba(15, 23, 42, 0.85)"][style*="color: rgb(6, 182, 212)"] {
+  color: #22d3ee !important;
+}
+

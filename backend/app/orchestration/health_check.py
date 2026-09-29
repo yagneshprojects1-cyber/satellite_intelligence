@@ -153,41 +153,40 @@ class SystemHealthChecker:
                 details={"error": str(e)}
             )
     
+    def _qdrant_snapshot(self):
+        """Read collection stats using the shared local Qdrant client."""
+        from app.vector_db.qdrant_manager import get_qdrant_client
+
+        client = get_qdrant_client(self.qdrant_storage)
+        clay_exists = client.collection_exists("satellite_tiles")
+        clay_count = 0
+        if clay_exists:
+            clay_count = client.get_collection("satellite_tiles").points_count
+
+        clip_exists = client.collection_exists("satellite_tiles_clip")
+        clip_count = 0
+        if clip_exists:
+            clip_count = client.get_collection("satellite_tiles_clip").points_count
+
+        return {
+            "clay_collection": clay_exists,
+            "clay_count": clay_count,
+            "clip_collection": clip_exists,
+            "clip_count": clip_count,
+        }
+
     def _check_qdrant(self) -> HealthCheck:
         """Check Qdrant connectivity and collections."""
         try:
-            from qdrant_client import QdrantClient
-            
-            client = QdrantClient(path=str(self.qdrant_storage))
-            
-            # Check Clay collection
-            clay_exists = client.collection_exists("satellite_tiles")
-            clay_count = 0
-            if clay_exists:
-                clay_info = client.get_collection("satellite_tiles")
-                clay_count = clay_info.points_count
-            
-            # Check CLIP collection
-            clip_exists = client.collection_exists("satellite_tiles_clip")
-            clip_count = 0
-            if clip_exists:
-                clip_info = client.get_collection("satellite_tiles_clip")
-                clip_count = clip_info.points_count
-            
+            details = self._qdrant_snapshot()
+            total = (details["clay_count"] or 0) + (details["clip_count"] or 0)
             return HealthCheck(
                 component="qdrant",
                 status=HealthStatus.HEALTHY.value,
-                message="Qdrant available",
-                details={
-                    "clay_collection": clay_exists,
-                    "clay_count": clay_count,
-                    "clip_collection": clip_exists,
-                    "clip_count": clip_count
-                }
+                message=f"Local Qdrant ready ({total} indexed points)",
+                details=details
             )
-            
         except Exception as e:
-            # Return degraded status instead of unhealthy to allow startup
             return HealthCheck(
                 component="qdrant",
                 status=HealthStatus.DEGRADED.value,
@@ -248,31 +247,23 @@ class SystemHealthChecker:
         )
     
     def _check_indexes(self) -> HealthCheck:
-        """Check Qdrant index status."""
+        """Check Qdrant index status using the shared client."""
         try:
-            from qdrant_client import QdrantClient
-            
-            client = QdrantClient(path=str(self.qdrant_storage))
-            
-            # Check if collections have data
-            clay_indexed = False
-            clip_indexed = False
-            
-            if client.collection_exists("satellite_tiles"):
-                info = client.get_collection("satellite_tiles")
-                clay_indexed = info.points_count > 0
-            
-            if client.collection_exists("satellite_tiles_clip"):
-                info = client.get_collection("satellite_tiles_clip")
-                clip_indexed = info.points_count > 0
-            
+            details = self._qdrant_snapshot()
+            clay_indexed = bool(details["clay_collection"] and details["clay_count"] > 0)
+            clip_indexed = bool(details["clip_collection"] and details["clip_count"] > 0)
+            status = HealthStatus.HEALTHY.value if (clay_indexed or clip_indexed) else HealthStatus.DEGRADED.value
+            message = (
+                f"Clay {details['clay_count']} · CLIP {details['clip_count']}"
+                if (clay_indexed or clip_indexed)
+                else "Vector indexes empty"
+            )
             return HealthCheck(
                 component="indexes",
-                status=HealthStatus.HEALTHY.value if (clay_indexed or clip_indexed) else HealthStatus.DEGRADED.value,
-                message="Vector indexes",
-                details={"clay_indexed": clay_indexed, "clip_indexed": clip_indexed}
+                status=status,
+                message=message,
+                details={"clay_indexed": clay_indexed, "clip_indexed": clip_indexed, **details}
             )
-            
         except Exception as e:
             return HealthCheck(
                 component="indexes",

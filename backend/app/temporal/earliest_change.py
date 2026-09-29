@@ -51,7 +51,7 @@ class EarliestChangeAnalyzer:
                  change_results_dir: Path = Path("data/change_results"),
                  temporal_pairs_dir: Path = Path("data/temporal_pairs"),
                  output_dir: Path = Path("data/earliest_changes"),
-                 confidence_threshold: float = 0.5,
+                 confidence_threshold: float = 0.30,
                  change_percentage_threshold: float = 5.0):
         """
         Initialize earliest change analyzer.
@@ -263,18 +263,29 @@ class EarliestChangeAnalyzer:
             ]
         
         else:
-            # No change detected
+            # Below detection threshold — keep measured intensity so stable sites are not identical zeros
             persistence = ChangePersistence.NO_CHANGE.value
             earliest_change_date = None
-            before_date = None
-            after_date = None
-            confidence = 0.0
-            change_percentage = 0.0
-            evidence_pairs = []
+            available = [r for r in evidence_map.values() if r]
+            best = max(available, key=lambda r: r.get('change_percentage', 0.0)) if available else None
+            before_date = best.get('before_date') if best else None
+            after_date = best.get('after_date') if best else None
+            confidence = best.get('confidence', 0.0) if best else 0.0
+            change_percentage = best.get('change_percentage', 0.0) if best else 0.0
+            evidence_pairs = [
+                {"pair_id": r.get('pair_id', 'N/A'), "evidence": "below_threshold"}
+                for r in available
+            ]
         
+        location_ref = "unknown"
+        for candidate in evidence_map.values():
+            if candidate and candidate.get('bbox'):
+                location_ref = json.dumps(candidate['bbox'], sort_keys=True)
+                break
+
         # Create result
         result = EarliestChangeResult(
-            location_reference=json.dumps(evidence_map["2022_2023"]['bbox'], sort_keys=True) if evidence_map["2022_2023"] else "unknown",
+            location_reference=location_ref,
             earliest_change_date=earliest_change_date if earliest_change_date else "N/A",
             before_date=before_date if before_date else "N/A",
             after_date=after_date if after_date else "N/A",
@@ -321,6 +332,7 @@ class EarliestChangeAnalyzer:
             print(f"Analyzing location: {location[:50]}...")
             
             earliest_result = self._analyze_temporal_sequence(result_list)
+            earliest_result.location_reference = location
             results.append(earliest_result)
             
             # Count persistence types

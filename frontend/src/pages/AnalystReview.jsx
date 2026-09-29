@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
-import { getChangeAnalysis, submitAnalystReview } from '../services/api'
+import { getChangeAnalysis, submitAnalystReview, getAnalystReviewHistory } from '../services/api'
+import { formatPairTitle, formatDateFriendly } from '../utils/locationFormatter'
 import {
   CheckCircle2,
   XCircle,
@@ -19,6 +20,8 @@ import {
 function AnalystReview() {
   const [changes, setChanges] = useState([])
   const [selectedChange, setSelectedChange] = useState(null)
+  const [reviewHistory, setReviewHistory] = useState([])
+  const [showHistory, setShowHistory] = useState(false)
   const [review, setReview] = useState({
     decision: '',
     change_type: 'construction',
@@ -31,7 +34,17 @@ function AnalystReview() {
 
   useEffect(() => {
     loadChanges()
+    loadHistory()
   }, [])
+
+  const loadHistory = async () => {
+    try {
+      const res = await getAnalystReviewHistory()
+      if (res.reviews) setReviewHistory(res.reviews)
+    } catch (err) {
+      console.error('History load error:', err)
+    }
+  }
 
   const loadChanges = async () => {
     setLoading(true)
@@ -41,7 +54,6 @@ function AnalystReview() {
       if (list.length > 0) {
         setChanges(list)
       } else {
-        // High quality fallback sample change candidates for review
         setChanges([
           {
             pair_id: '2022_2023_T43QFV_000001',
@@ -55,66 +67,11 @@ function AnalystReview() {
             latitude: 18.0635,
             longitude: 75.9691,
             suggested_type: 'construction'
-          },
-          {
-            pair_id: '2023_2024_T43QFV_000002',
-            before_tile_id: '2023_T43QFV_000002',
-            after_tile_id: '2024_T43QFV_000002',
-            before_date: '2023-11-15',
-            after_date: '2024-03-20',
-            change_percentage: 42.1,
-            confidence: 0.94,
-            model_used: 'Siam-ResNet50',
-            latitude: 18.0850,
-            longitude: 75.9910,
-            suggested_type: 'clearance'
-          },
-          {
-            pair_id: '2022_2024_T43QFV_000003',
-            before_tile_id: '2022_T43QFV_000003',
-            after_tile_id: '2024_T43QFV_000001',
-            before_date: '2022-12-27',
-            after_date: '2024-03-20',
-            change_percentage: 14.6,
-            confidence: 0.82,
-            model_used: 'Siam-ResNet50',
-            latitude: 18.1200,
-            longitude: 76.0120,
-            suggested_type: 'water_variation'
           }
         ])
       }
     } catch (error) {
       console.error('Error loading changes:', error)
-      // Fallback candidates
-      setChanges([
-        {
-          pair_id: '2022_2023_T43QFV_000001',
-          before_tile_id: '2022_T43QFV_000001',
-          after_tile_id: '2023_T43QFV_000001',
-          before_date: '2022-12-27',
-          after_date: '2023-11-15',
-          change_percentage: 28.4,
-          confidence: 0.89,
-          model_used: 'Siam-ResNet50',
-          latitude: 18.0635,
-          longitude: 75.9691,
-          suggested_type: 'construction'
-        },
-        {
-          pair_id: '2023_2024_T43QFV_000002',
-          before_tile_id: '2023_T43QFV_000002',
-          after_tile_id: '2024_T43QFV_000002',
-          before_date: '2023-11-15',
-          after_date: '2024-03-20',
-          change_percentage: 42.1,
-          confidence: 0.94,
-          model_used: 'Siam-ResNet50',
-          latitude: 18.0850,
-          longitude: 75.9910,
-          suggested_type: 'clearance'
-        }
-      ])
     } finally {
       setLoading(false)
     }
@@ -149,15 +106,16 @@ function AnalystReview() {
 
       setNotification({
         type: 'success',
-        message: `Candidate ${selectedChange.pair_id} successfully marked as ${review.decision.toUpperCase()}.`
+        message: `${formatPairTitle(selectedChange.pair_id, selectedChange.before_date, selectedChange.after_date)} successfully marked as ${review.decision.toUpperCase()}.`
       })
+
+      loadHistory()
 
       setTimeout(() => {
         setSelectedChange(null)
       }, 1200)
     } catch (error) {
       console.error('Error submitting review:', error)
-      // Save locally even if backend endpoint is in simulation mode
       setReviewedIds((prev) => ({
         ...prev,
         [selectedChange.pair_id]: review.decision
@@ -281,14 +239,18 @@ function AnalystReview() {
                     }}
                   >
                     <div className="result-content">
-                      {/* Top Header: Pair ID and Status Pill */}
-                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.85rem' }}>
-                        <div style={{
-                          fontFamily: 'monospace', fontSize: '0.84rem', fontWeight: 600,
-                          color: '#f1f5f9', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis',
-                          maxWidth: '75%'
-                        }}>
-                          {change.pair_id}
+                      {/* Top Header: Friendly Title and Status Pill */}
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '0.5rem', marginBottom: '0.85rem' }}>
+                        <div style={{ flex: 1, minWidth: 0 }}>
+                          <div style={{
+                            fontSize: '0.9rem', fontWeight: 700,
+                            color: '#f1f5f9', lineHeight: 1.3, marginBottom: '0.15rem'
+                          }}>
+                            {formatPairTitle(change.pair_id, change.before_date, change.after_date, change.latitude, change.longitude)}
+                          </div>
+                          <div style={{ fontSize: '0.72rem', color: '#475569', fontFamily: 'monospace' }}>
+                            {change.before_tile_id || ''}{change.before_tile_id && change.after_tile_id ? ' → ' : ''}{change.after_tile_id || ''}
+                          </div>
                         </div>
                         {status ? (
                           <span style={{
@@ -402,9 +364,12 @@ function AnalystReview() {
               <div style={{ fontSize: '0.75rem', color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.04em', marginBottom: '0.25rem' }}>
                 Review Candidate
               </div>
-              <h2 style={{ fontSize: '1.15rem', fontFamily: 'monospace', margin: 0, color: '#f8fafc' }}>
-                {selectedChange.pair_id}
+              <h2 style={{ fontSize: '1.1rem', fontWeight: 700, margin: 0, color: '#f8fafc', marginBottom: '0.25rem' }}>
+                {formatPairTitle(selectedChange.pair_id, selectedChange.before_date, selectedChange.after_date, selectedChange.latitude, selectedChange.longitude)}
               </h2>
+              <div style={{ fontSize: '0.72rem', color: '#475569', fontFamily: 'monospace' }}>
+                {selectedChange.before_tile_id || ''}{selectedChange.before_tile_id && selectedChange.after_tile_id ? ' → ' : ''}{selectedChange.after_tile_id || selectedChange.pair_id}
+              </div>
             </div>
 
             <div style={{ display: 'flex', gap: '0.6rem', flexWrap: 'wrap' }}>

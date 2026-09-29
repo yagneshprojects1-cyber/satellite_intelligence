@@ -1,17 +1,34 @@
+import threading
 import uuid
-import numpy as np
 from pathlib import Path
 from qdrant_client import QdrantClient
 from qdrant_client.models import (
     Distance, VectorParams,
-    Filter, FieldCondition, MatchValue, PointStruct
+    Filter, FieldCondition, MatchValue
 )
+
+# Local (embedded) Qdrant locks the storage folder to a single client.
+# Health checks, pipeline status, search, and indexing must share one instance.
+_CLIENTS = {}
+_CLIENTS_LOCK = threading.Lock()
+
+
+def get_qdrant_client(storage_path="qdrant_storage"):
+    """Return a process-wide Qdrant client for the given local storage path."""
+    key = str(Path(storage_path).resolve())
+    with _CLIENTS_LOCK:
+        client = _CLIENTS.get(key)
+        if client is None:
+            client = QdrantClient(path=key)
+            _CLIENTS[key] = client
+        return client
+
 
 class QdrantManager:
     def __init__(self, storage_path="qdrant_storage", collection_name="satellite_tiles"):
         self.storage_path = Path(storage_path)
         self.collection_name = collection_name
-        self.client = QdrantClient(path=str(self.storage_path))
+        self.client = get_qdrant_client(self.storage_path)
         
     def setup_collection(self, dimension=1024):
         if not self.client.collection_exists(self.collection_name):

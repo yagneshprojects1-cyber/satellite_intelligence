@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from 'react'
 import { similarLocationsFile } from '../services/api'
 import { Layers, X, Calendar, MapPin, UploadCloud, CheckCircle2, AlertCircle, Satellite } from 'lucide-react'
+import { formatLocationTitle, formatDateFriendly } from '../utils/locationFormatter'
 
 function SimilarLocations() {
   const [file, setFile] = useState(null)
@@ -374,17 +375,22 @@ function SimilarLocations() {
                         Cluster #{result.cluster_id ?? '0'}
                       </span>
                       <span style={{ fontSize: '0.72rem', color: '#64748b' }}>
-                        {result.date || '2022'}
+                        {formatDateFriendly(result.date) || result.date || '—'}
                       </span>
                     </div>
 
-                    {/* Tile ID */}
-                    <div style={{
-                      fontFamily: 'monospace', fontSize: '0.8rem', fontWeight: 600,
-                      color: '#f1f5f9', marginBottom: '0.65rem',
-                      whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis'
-                    }}>
-                      {result.tile_id}
+                    {/* Location Name */}
+                    <div style={{ marginBottom: '0.65rem' }}>
+                      <div style={{
+                        fontSize: '0.88rem', fontWeight: 700,
+                        color: '#f1f5f9', marginBottom: '0.15rem',
+                        lineHeight: 1.3
+                      }}>
+                        {formatLocationTitle(result.tile_id, result.latitude, result.longitude)}
+                      </div>
+                      <div style={{ fontSize: '0.7rem', color: '#475569', fontFamily: 'monospace' }}>
+                        {result.tile_id}
+                      </div>
                     </div>
 
                     {/* Meta */}

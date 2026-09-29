@@ -53,6 +53,15 @@ export const getChangeAnalysis = async () => {
   return response.data
 }
 
+export const runDynamicChangeAnalysis = async (beforeTileId, afterTileId, confidenceThreshold = 0.5) => {
+  const response = await api.post('/dynamic-change-analysis', {
+    before_tile_id: beforeTileId,
+    after_tile_id: afterTileId,
+    confidence_threshold: confidenceThreshold,
+  })
+  return response.data
+}
+
 // Earliest Change
 export const getEarliestChanges = async () => {
   const response = await api.get('/earliest-change')
@@ -89,9 +98,23 @@ export const getMapData = async (year = null, limit = 300) => {
   return response.data
 }
 
-// Analyst Review
+// Analyst Review & Export
 export const submitAnalystReview = async (reviewData) => {
   const response = await api.post('/analyst-review', reviewData)
+  return response.data
+}
+
+export const getAnalystReviewHistory = async () => {
+  const response = await api.get('/analyst-review/history')
+  return response.data
+}
+
+export const exportData = async (exportType, format, data) => {
+  const response = await api.post('/export', {
+    export_type: exportType,
+    format: format,
+    data: data,
+  })
   return response.data
 }
 
